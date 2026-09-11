@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.8.17"
+      - name: Install
+        run: uv sync
+      - name: Build sdist + wheel
+        run: uv build
+      - name: Import check
+        run: uv run python -c "from observability import init_observability, shutdown_otel"
+
+  # No deploy stage — this repo doesn't get deployed anywhere itself.
+  # Consumers pull it via a git dependency pinned to a tag (see README).
+  # Tag a release after merging a change you want consumers to pick up:
+  #   git tag vX.Y.Z && git push --tags
